@@ -21,6 +21,8 @@ Solución profesional para Prototype_PCAF_Pro desarrollada con las mejores prác
         └── 📂 logs/
         └── 📂 objects/
         └── 📂 refs/
+    └── 📂 .github/
+        └── 📂 workflows/
     └── 📂 assets/
         └── 📂 images/
         └── 📂 prototypes/
