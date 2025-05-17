@@ -3,7 +3,7 @@
 
 
 ![Estado](https://img.shields.io/badge/Estado-🚀_Producción-green)
-![Última Actualización](https://img.shields.io/badge/Última_Actualización-2025-05-14-lightgray)
+![Última Actualización](https://img.shields.io/badge/Última_Actualización-2025-05-17-lightgray)
 ![Licencia](https://img.shields.io/badge/Licencia-Propietario-red)
 
 
@@ -18,6 +18,7 @@ Solución profesional para Prototype_PCAF_Pro desarrollada con las mejores prác
     └── 📂 .git/
         └── 📂 hooks/
         └── 📂 info/
+        └── 📂 logs/
         └── 📂 objects/
         └── 📂 refs/
     └── 📂 assets/
