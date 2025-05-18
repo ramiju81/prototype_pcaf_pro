@@ -16,6 +16,7 @@ Solución profesional para Prototype_PCAF_Pro desarrollada con las mejores prác
 ## 📂 Estructura del Proyecto
 📁 Prototype_PCAF_Pro/
     └── 📂 .git/
+        └── 📂 filter-repo/
         └── 📂 hooks/
         └── 📂 info/
         └── 📂 logs/
