@@ -11,6 +11,8 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}  # <-- AÑADE ESTA LÍNEA
 
     steps:
       - name: Checkout private repo
