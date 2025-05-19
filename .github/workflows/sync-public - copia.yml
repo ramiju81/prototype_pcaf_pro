@@ -12,7 +12,7 @@ jobs:
       pull-requests: write
       issues: write
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ github.token }}  # <-- AÑADE ESTA LÍNEA
 
     steps:
       - name: Checkout private repo
@@ -42,7 +42,7 @@ jobs:
           if ! gh api "repos/${{ steps.repo-name.outputs.REPO_URL }}" > /dev/null 2>&1; then
             echo "🔷 Creating new public repository"
             gh repo create "${{ steps.repo-name.outputs.REPO_URL }}" --public --confirm
-            sleep 5
+            sleep 5  # Wait for repo to be fully initialized
           else
             echo "🔷 Public repository already exists"
           fi
@@ -63,6 +63,7 @@ jobs:
             cd -
             echo "IS_NEW_REPO=true" >> $GITHUB_OUTPUT
             
+            # Create minimal files for new repo
             echo "# ${{ steps.repo-name.outputs.REPO_NAME }}" > ../public-repo/README.md
             echo "Project synchronized from private repository" >> ../public-repo/README.md
             curl -s https://api.github.com/licenses/mit | jq -r '.body' > ../public-repo/LICENSE
@@ -131,9 +132,7 @@ jobs:
           if ! git diff-index --quiet HEAD --; then
             git commit -m "🔀 Sync from private repo [$(date +'%Y-%m-%d %H:%M:%S')]"
             
-            # Configuración explícita del remote
-            git remote set-url origin "https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git"
-            
+            # Try pushing with different methods
             MAX_RETRIES=3
             RETRY_DELAY=5
             attempt=1
@@ -146,8 +145,6 @@ jobs:
                 break
               else
                 echo "🟠 Push attempt $attempt failed"
-                echo "::debug::Remote URL: $(git remote get-url origin)"
-                echo "::debug::Git config: $(git config --list)"
                 if [ $attempt -eq $MAX_RETRIES ]; then
                   echo "🔴 All push attempts failed"
                   exit 1
@@ -168,6 +165,7 @@ jobs:
           SYNC_ISSUE_TITLE="🔄 Sync Status - ${{ steps.repo-name.outputs.REPO_NAME }}"
           SYNC_BODY="### Last Sync Details\n\n- **Time**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')\n- **Triggered by**: ${{ github.actor }}\n- **Commit**: [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})"
           
+          # Check if sync issue already exists
           EXISTING_ISSUE=$(gh api "repos/${{ steps.repo-name.outputs.REPO_URL }}/issues" --jq '.[] | select(.title == "'"$SYNC_ISSUE_TITLE"'") | .number' || true)
           
           if [ -z "$EXISTING_ISSUE" ]; then
