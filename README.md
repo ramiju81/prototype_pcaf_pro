@@ -1,6 +1,6 @@
 # 🔬 Prototype_PCAF_Pro
 
-![Estado](https://img.shields.io/badge/%F0%9F%9A%80_En_Producci%C3%B3n-green) ![Licencia](https://img.shields.io/badge/Licencia-Propietario-red) ![Actualización](https://img.shields.io/badge/🔄_Última_actividad-2025--05--18 22:59-lightgrey)
+![Estado](https://img.shields.io/badge/%F0%9F%9A%80_En_Producci%C3%B3n-green) ![Licencia](https://img.shields.io/badge/Licencia-Propietario-red) ![Actualización](https://img.shields.io/badge/📞_Última_actividad-2025--05--18 23:30-lightgrey)
 
 ## 📋 Descripción
 
@@ -48,4 +48,4 @@ Este proyecto refleja mi capacidad para:
 ---
 📅 **Historial de Actualizaciones**
 🔹 Versión actual: 1.0.0
-🔹 Última actualización: 2025-05-18 22:59
+🔹 Última actualización: 2025-05-18 23:30
