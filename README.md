@@ -1,6 +1,6 @@
 # 🔬 Prototype_PCAF_Pro
 
-![Estado](https://img.shields.io/badge/%F0%9F%9A%80_En_Producci%C3%B3n-green) ![Licencia](https://img.shields.io/badge/Licencia-🔒_Privada-red) ![Actualización](https://img.shields.io/badge/📞_Última_actividad-2025--05--18%2023:34-lightgrey)
+![Estado](https://img.shields.io/badge/%F0%9F%9A%80_En_Producci%C3%B3n-green) ![Licencia](https://img.shields.io/badge/Licencia-🔒_Privada-red) ![Última Actualización](https://img.shields.io/badge/Última_Actualización-2025-05-18-lightgray)
 
 ## 📋 Descripción
 
