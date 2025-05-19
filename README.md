@@ -1,38 +1,26 @@
+# Prototype_PCAF
 
-# Prototype_PCAF_Pro - Proyecto Profesional
-
-
-![Estado](https://img.shields.io/badge/Estado-🚀_Producción-green)
-![Última Actualización](https://img.shields.io/badge/Última_Actualización-2025-05-17-lightgray)
-![Licencia](https://img.shields.io/badge/Licencia-Propietario-red)
-
-
-## 📋 Descripción
-Solución profesional para Prototype_PCAF_Pro desarrollada con las mejores prácticas.
+## 🚀 Estado del Proyecto
+**Estado actual:** Released
 
 ## 🛠 Tecnologías Utilizadas
-![HTML](https://img.shields.io/badge/HTML-E34F26?logo=html5&logoColor=white)
+- HTML
+
+## 📝 Descripción
+Solución profesional desarrollada con tecnologías modernas
 
 ## 📂 Estructura del Proyecto
-📁 Prototype_PCAF_Pro/
-    └── 📂 .git/
-        └── 📂 filter-repo/
-        └── 📂 hooks/
-        └── 📂 info/
-        └── 📂 logs/
-        └── 📂 objects/
-        └── 📂 refs/
-    └── 📂 .github/
-        └── 📂 workflows/
-    └── 📂 assets/
-        └── 📂 images/
-        └── 📂 prototypes/
-        └── 📂 videos/
-
-## 🛡️ Derechos de Autor
-© 2025 Julian Ramirez. Todos los derechos reservados.
+📁 .git/
+📁 .github/
+📁 assets/
+📄 index.html
+📄 Propuesta de una estrategia tecnologia PCAF.pdf
+📄 README.md
 
 ## 📬 Contacto
-**Julian Alberto Ramirez**  
-📧 [juliram81@hotmail.com](mailto:juliram81@hotmail.com)  
-🔗 [LinkedIn](https://linkedin.com/in/julianramirezc)
+- **Nombre:** Julian Ramirez
+- **Email:** juliram81@hotmail.com
+- **GitHub:** [ramiju81](https://github.com/ramiju81)
+- **LinkedIn:** [Julian Ramirez](https://linkedin.com/in/julianramirezc)
+
+📅 **Última actualización:** 2025-05-17 23:41
