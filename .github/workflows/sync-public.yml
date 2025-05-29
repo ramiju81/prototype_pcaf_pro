@@ -25,37 +25,55 @@ jobs:
             echo "🔷 Loading .env file"
             export $(grep -v '^#' .env | xargs)
             echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> $GITHUB_ENV
-            echo "GITHUB_USER=${GITHUB_USER}" >> $GITHUB_ENV
+            echo "GITHUB_USER=${GITHUB_USER:-ramiju81}" >> $GITHUB_ENV
+            echo "::debug::Loaded GITHUB_TOKEN from .env (first 6 chars): ${GITHUB_TOKEN:0:6}"
           else
-            echo "🔷 No .env file found, using GitHub secret"
-            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-            echo "GITHUB_USER=ramiju81" >> $GITHUB_ENV
+            echo "🔴 Error: No .env file found and no GITHUB_TOKEN secret provided"
+            exit 1
           fi
+          # Validate token format
+          if [ -z "${GITHUB_TOKEN}" ]; then
+            echo "🔴 Error: GITHUB_TOKEN is not set"
+            exit 1
+          fi
+          if [[ ! "${GITHUB_TOKEN}" =~ ^ghp_ ]]; then
+            echo "🔴 Error: GITHUB_TOKEN does not start with 'ghp_'"
+            exit 1
+          fi
+
+      - name: Validate GitHub token
+        run: |
+          echo "🔷 Validating GitHub token (first 6 chars: ${GITHUB_TOKEN:0:6})..."
+          curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" https://api.github.com/user > token_status.txt
+          STATUS=$(cat token_status.txt)
+          if [ "$STATUS" -eq 200 ]; then
+            echo "🟢 Token is valid"
+          else
+            echo "🔴 Token is invalid or expired (HTTP $STATUS)"
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
 
       - name: Get public repo name
         id: repo-name
         run: |
           PUBLIC_NAME=$(echo "${{ github.repository }}" | sed -E 's/.*\///; s/(_Pro|-Private)//g')
-          echo "REPO_URL=${{ github.repository_owner }}/${PUBLIC_NAME}" >> $GITHUB_OUTPUT
+          PUBLIC_URL="${{ github.repository_owner }}/${PUBLIC_NAME}"
+          echo "REPO_URL=${PUBLIC_URL}" >> $GITHUB_OUTPUT
           echo "REPO_NAME=${PUBLIC_NAME}" >> $GITHUB_OUTPUT
-          echo "🔷 Public repo: ${{ github.repository_owner }}/${PUBLIC_NAME}"
-
-      - name: Configure git with proper authentication
-        run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git config --global http.https://github.com/.extraheader ""
-          git config --global url."https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-          git config --global --list
+          echo "🔷 Public repo: ${PUBLIC_URL}"
 
       - name: Verify public repo exists or create it
         run: |
-          if ! gh api "repos/${{ steps.repo-name.outputs.REPO_URL }}" > /dev/null 2>&1; then
-            echo "🔷 Creating new public repository ${{ steps.repo-name.outputs.REPO_URL }}"
-            gh repo create "${{ steps.repo-name.outputs.REPO_URL }}" --public
+          PUBLIC_URL="${{ steps.repo-name.outputs.REPO_URL }}"
+          echo "🔷 Checking if public repo ${PUBLIC_URL} exists..."
+          if ! gh api "repos/${PUBLIC_URL}" > /dev/null 2>&1; then
+            echo "🔷 Creating new public repository ${PUBLIC_URL}"
+            gh repo create "${PUBLIC_URL}" --public
             sleep 5
           else
-            echo "🔷 Public repository already exists"
+            echo "🔷 Public repository ${PUBLIC_URL} already exists"
           fi
         env:
           GH_TOKEN: ${{ env.GITHUB_TOKEN }}
@@ -63,7 +81,8 @@ jobs:
       - name: Prepare public repo
         id: prepare-repo
         run: |
-          if git clone "https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git" ../public-repo 2>/dev/null; then
+          PUBLIC_URL="${{ steps.repo-name.outputs.REPO_URL }}"
+          if git clone "https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${PUBLIC_URL}.git" ../public-repo 2>/dev/null; then
             echo "🔷 Existing repo cloned"
             echo "IS_NEW_REPO=false" >> $GITHUB_OUTPUT
           else
@@ -77,7 +96,7 @@ jobs:
             curl -s https://api.github.com/licenses/mit | jq -r '.body' > LICENSE
             git add README.md LICENSE
             git commit -m "Initial commit for public repo"
-            git remote add origin "https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git"
+            git remote add origin "https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${PUBLIC_URL}.git"
             git push origin main
             echo "IS_NEW_REPO=true" >> $GITHUB_OUTPUT
           fi
