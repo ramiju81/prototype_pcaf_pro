@@ -11,8 +11,6 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-    env:
-      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Checkout private repo
@@ -20,6 +18,17 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Load .env file
+        run: |
+          if [ -f .env ]; then
+            echo "🔷 Loading .env file"
+            export $(grep -v '^#' .env | xargs)
+            echo "PUBLIC_REPO_TOKEN=${PUBLIC_REPO_TOKEN}" >> $GITHUB_ENV
+          else
+            echo "🔷 No .env file found, using GitHub secret"
+            echo "PUBLIC_REPO_TOKEN=${{ secrets.PUBLIC_REPO_TOKEN }}" >> $GITHUB_ENV
+          fi
 
       - name: Get public repo name
         id: repo-name
@@ -34,7 +43,7 @@ jobs:
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git config --global http.https://github.com/.extraheader ""
-          git config --global url."https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${PUBLIC_REPO_TOKEN}@github.com/".insteadOf "https://github.com/"
           git config --global --list
 
       - name: Verify public repo exists or create it
@@ -46,11 +55,13 @@ jobs:
           else
             echo "🔷 Public repository already exists"
           fi
+        env:
+          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
 
       - name: Prepare public repo
         id: prepare-repo
         run: |
-          if git clone "https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}" ../public-repo 2>/dev/null; then
+          if git clone "https://x-access-token:${{ env.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git" ../public-repo 2>/dev/null; then
             echo "🔷 Existing repo cloned"
             echo "IS_NEW_REPO=false" >> $GITHUB_OUTPUT
           else
@@ -58,15 +69,18 @@ jobs:
             mkdir -p ../public-repo
             cd ../public-repo
             git init
-            git remote add origin "https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}"
             git checkout -b main
-            cd -
+            echo "# ${{ steps.repo-name.outputs.REPO_NAME }}" > README.md
+            echo "Project synchronized from private repository" >> README.md
+            curl -s https://api.github.com/licenses/mit | jq -r '.body' > LICENSE
+            git add README.md LICENSE
+            git commit -m "Initial commit for public repo"
+            git remote add origin "https://x-access-token:${{ env.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git"
+            git push origin main
             echo "IS_NEW_REPO=true" >> $GITHUB_OUTPUT
-            
-            echo "# ${{ steps.repo-name.outputs.REPO_NAME }}" > ../public-repo/README.md
-            echo "Project synchronized from private repository" >> ../public-repo/README.md
-            curl -s https://api.github.com/licenses/mit | jq -r '.body' > ../public-repo/LICENSE
           fi
+        env:
+          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
 
       - name: Backup important files
         run: |
@@ -98,7 +112,7 @@ jobs:
 
       - name: Restore important files
         run: |
-          for file in $(find ../backup -type f); do
+          for file in $(find ../backup -type f 2>/dev/null || true); do
             dest="../public-repo/${file#../backup/}"
             mkdir -p "$(dirname "$dest")"
             cp "$file" "$dest"
@@ -128,11 +142,9 @@ jobs:
           cd ../public-repo
           git add -A
           
-          if ! git diff-index --quiet HEAD --; then
+          # Check if there are changes to commit
+          if ! git diff --staged --quiet; then
             git commit -m "🔀 Sync from private repo [$(date +'%Y-%m-%d %H:%M:%S')]"
-            
-            # Configuración explícita del remote
-            git remote set-url origin "https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git"
             
             MAX_RETRIES=3
             RETRY_DELAY=5
@@ -160,6 +172,8 @@ jobs:
             echo "🟡 No changes to sync"
             echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
           fi
+        env:
+          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
 
       - name: Create/Update sync status issue
         if: steps.commit.outputs.HAS_CHANGES == 'true'
@@ -175,6 +189,8 @@ jobs:
           else
             gh issue comment "$EXISTING_ISSUE" --body "$SYNC_BODY\n\n---\n\n*This comment was automatically generated*" --repo "${{ steps.repo-name.outputs.REPO_URL }}"
           fi
+        env:
+          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
 
       - name: Post sync summary
         run: |
