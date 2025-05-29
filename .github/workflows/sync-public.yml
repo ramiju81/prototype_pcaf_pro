@@ -24,10 +24,12 @@ jobs:
           if [ -f .env ]; then
             echo "🔷 Loading .env file"
             export $(grep -v '^#' .env | xargs)
-            echo "PUBLIC_REPO_TOKEN=${PUBLIC_REPO_TOKEN}" >> $GITHUB_ENV
+            echo "GITHUB_TOKEN=${GITHUB_TOKEN}" >> $GITHUB_ENV
+            echo "GITHUB_USER=${GITHUB_USER}" >> $GITHUB_ENV
           else
             echo "🔷 No .env file found, using GitHub secret"
-            echo "PUBLIC_REPO_TOKEN=${{ secrets.PUBLIC_REPO_TOKEN }}" >> $GITHUB_ENV
+            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+            echo "GITHUB_USER=ramiju81" >> $GITHUB_ENV
           fi
 
       - name: Get public repo name
@@ -43,25 +45,25 @@ jobs:
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git config --global http.https://github.com/.extraheader ""
-          git config --global url."https://x-access-token:${PUBLIC_REPO_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
           git config --global --list
 
       - name: Verify public repo exists or create it
         run: |
           if ! gh api "repos/${{ steps.repo-name.outputs.REPO_URL }}" > /dev/null 2>&1; then
-            echo "🔷 Creating new public repository"
-            gh repo create "${{ steps.repo-name.outputs.REPO_URL }}" --public --confirm
+            echo "🔷 Creating new public repository ${{ steps.repo-name.outputs.REPO_URL }}"
+            gh repo create "${{ steps.repo-name.outputs.REPO_URL }}" --public
             sleep 5
           else
             echo "🔷 Public repository already exists"
           fi
         env:
-          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ env.GITHUB_TOKEN }}
 
       - name: Prepare public repo
         id: prepare-repo
         run: |
-          if git clone "https://x-access-token:${{ env.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git" ../public-repo 2>/dev/null; then
+          if git clone "https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git" ../public-repo 2>/dev/null; then
             echo "🔷 Existing repo cloned"
             echo "IS_NEW_REPO=false" >> $GITHUB_OUTPUT
           else
@@ -75,12 +77,12 @@ jobs:
             curl -s https://api.github.com/licenses/mit | jq -r '.body' > LICENSE
             git add README.md LICENSE
             git commit -m "Initial commit for public repo"
-            git remote add origin "https://x-access-token:${{ env.PUBLIC_REPO_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git"
+            git remote add origin "https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${{ steps.repo-name.outputs.REPO_URL }}.git"
             git push origin main
             echo "IS_NEW_REPO=true" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ env.GITHUB_TOKEN }}
 
       - name: Backup important files
         run: |
@@ -173,7 +175,7 @@ jobs:
             echo "HAS_CHANGES=false" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ env.GITHUB_TOKEN }}
 
       - name: Create/Update sync status issue
         if: steps.commit.outputs.HAS_CHANGES == 'true'
@@ -190,7 +192,7 @@ jobs:
             gh issue comment "$EXISTING_ISSUE" --body "$SYNC_BODY\n\n---\n\n*This comment was automatically generated*" --repo "${{ steps.repo-name.outputs.REPO_URL }}"
           fi
         env:
-          GITHUB_TOKEN: ${{ env.PUBLIC_REPO_TOKEN }}
+          GH_TOKEN: ${{ env.GITHUB_TOKEN }}
 
       - name: Post sync summary
         run: |
