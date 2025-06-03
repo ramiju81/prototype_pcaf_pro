@@ -28,7 +28,7 @@ jobs:
             echo "GITHUB_USER=${GITHUB_USER:-ramiju81}" >> $GITHUB_ENV
             echo "::debug::Loaded GITHUB_TOKEN from .env (first 6 chars): ${GITHUB_TOKEN:0:6}"
           else
-            echo "🔴 Error: No .env file found and no GITHUB_TOKEN secret provided"
+            echo "🔴 Error: No .env file found"
             exit 1
           fi
           # Validate token format
@@ -58,11 +58,12 @@ jobs:
       - name: Get public repo name
         id: repo-name
         run: |
-          PUBLIC_NAME=$(echo "${{ github.repository }}" | sed -E 's/.*\///; s/(_Pro|-Private)//g')
+          PUBLIC_NAME=$(echo "${{ github.repository }}" | sed -E 's|.*/||; s/_Pro$||')
           PUBLIC_URL="${{ github.repository_owner }}/${PUBLIC_NAME}"
           echo "REPO_URL=${PUBLIC_URL}" >> $GITHUB_OUTPUT
           echo "REPO_NAME=${PUBLIC_NAME}" >> $GITHUB_OUTPUT
           echo "🔷 Public repo: ${PUBLIC_URL}"
+          echo "::debug::Derived public repo name: ${PUBLIC_NAME}, full URL: ${PUBLIC_URL}"
 
       - name: Verify public repo exists or create it
         run: |
